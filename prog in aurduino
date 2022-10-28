@@ -1,0 +1,88 @@
+#include <LiquidCrystal.h>  		// Arduino LCD library
+#include <dht.h>   
+#include<Stepper.h>
+// Arduino Temperature and Humidity Sensor library
+#define DHT11_PIN 6        	//define temperature sensor pin
+dht DHT;                    		//Create a dht variable
+// initialize the library by associating LCD interface pin with the arduino pin number it is connected to
+int stepsPerRevolution=200;
+int motorspeed=10;
+Stepper myStepper(stepsPerRevolution, 10,7,9,13);
+const int rs = 12, en = 11, d4 = 5, d5 = 4, d6 = 3, d7 = 2;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+void setup() 
+{
+  			lcd.begin(16, 2); 
+  			Serial.begin(9600);
+ 			myStepper.setSpeed(motorspeed);
+  			// set up the LCD's number of columns and rows:
+}
+void loop() 
+{
+  lcd.setCursor(0,0);              	 //Position the cursor to 0 column , 0 row
+  lcd.print("Temp and Humid");   	//Print message on the LCD
+  lcd.setCursor(0,1);              	//Position the cursor to 0 column, 1 row
+  lcd.print("    Detection   ");   	//Print message on the LCD
+  delay(3000);                     		 //Delay for 3 seconds
+  DHT.read11(DHT11_PIN);            	 //Read the temperature sensor 
+  lcd.clear();                     		 //Clear the LCD
+  lcd.setCursor(0,0);              	 //Position the cursor to 0 column , 0 row
+  lcd.print("Temp = ");
+  lcd.print(DHT.temperature);      	 //Display Temperature value
+  lcd.print(" C");
+  lcd.setCursor(0,1);               	//Position the cursor to 0 column, 1 row
+  lcd.print("Humid = ");
+  lcd.print(DHT.humidity);          	//Display Humidity value
+  lcd.print("%");
+  delay(3000);  
+  lcd.clear();                          //exiting the previous display
+  if(DHT.temprature<=5.00 && DHT.humidity<=30.00)
+  {
+    lcd.setCursor(0,0);
+    lcd.print("Low temperature");
+   	lcd.setCursor(0,1);
+    lcd.print("Low humidity");
+   	myStepper.step(-stepsPerRevolution);     //low temperature hence   stepper motor rotates left
+    delay(3000);      	//Delay for 3 seconds
+   }     
+   else if(DHT.temprature<=5.00 && DHT.humidity>60.00)
+   {
+        lcd.setCursor(0,0);
+   			lcd.print("Low temperature");
+        lcd.setCursor(0,1);
+    		lcd.print("High humidity");
+    		myStepper.step(-stepsPerRevolution);      //low temperature hence stepper motor rotates left
+    		delay(3000);   
+    		lcd.clear(); 
+  	}            			
+    else if((DHT.temprature>5.00 && DHT.temprature<=32.00) &&   (DHT.humidity>30.00 && DHT.humidity<=60.00))
+ 		{
+          lcd.setCursor(0,0);
+    			lcd.print("Normal temp");
+    			lcd.setCursor(0,1);
+          lcd.print("Normal humid");         //normal temperature hence stepper motor does not rotate
+   	 		  delay(3000);
+    			lcd.clear(); 
+  	}  
+  	else if(DHT.temprature>32.00 && DHT.humidity<=30.00)
+ 		{
+    			lcd.setCursor(0,0);
+   		  	lcd.print("High temperature");
+    			lcd.setCursor(0,1);
+    			lcd.print("Low humidity");
+    			myStepper.step(stepsPerRevolution);       //high temperature hence stepper motor rotates right
+    			delay(3000);
+   			  lcd.clear(); 
+  		}
+      else if(DHT.temprature>32.00 && DHT.humidity>60.00)
+  		{
+    			lcd.setCursor(0,0);
+    			lcd.print("High temperature");
+    			lcd.setCursor(0,1);
+    			lcd.print("High humidity");
+    			myStepper.step(stepsPerRevolution);     //high temperature hence stepper motor rotates right
+   			delay(3000);
+    			lcd.clear(); 
+  		}
+}
